@@ -1,0 +1,27 @@
+"use client"
+
+import { signOut } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+
+export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
+    return (
+        <header className="mb-6 sm:mb-8 flex flex-row items-center justify-between gap-4">
+            <div className="min-w-0">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">BuildLedger</h1>
+                <p className="text-[10px] sm:text-sm text-gray-500 truncate">
+                    Welcome, {user?.name?.split(' ')[0] || "User"}
+                </p>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-8 px-2 sm:px-3 sm:text-sm sm:h-9"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                >
+                    Sign out
+                </Button>
+            </div>
+        </header>
+    )
+}
