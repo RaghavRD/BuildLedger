@@ -2,8 +2,12 @@
 
 import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { LogoutConfirmationDialog } from "./logout-confirmation-dialog"
 
 export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
+    const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+
     return (
         <header className="mb-6 sm:mb-8 flex flex-row items-center justify-between gap-4">
             <div className="min-w-0">
@@ -16,12 +20,17 @@ export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs h-8 px-2 sm:px-3 sm:text-sm sm:h-9"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className="text-xs h-8 px-2 sm:px-3 sm:text-sm sm:h-9 text-gray-600 hover:text-red-600 hover:bg-red-50"
+                    onClick={() => setIsLogoutDialogOpen(true)}
                 >
                     Sign out
                 </Button>
             </div>
+
+            <LogoutConfirmationDialog
+                isOpen={isLogoutDialogOpen}
+                onOpenChange={setIsLogoutDialogOpen}
+            />
         </header>
     )
 }
