@@ -296,3 +296,42 @@ export async function updateProject(formData: FormData) {
         return { error: "Failed to update project" }
     }
 }
+
+export async function deleteProject(projectId: string, name: string) {
+    const session = await getServerSession(authOptions)
+
+    if (!session || !session.user) {
+        return { error: "Unauthorized" }
+    }
+
+    // Only ADMIN can delete projects
+    if (session.user.role !== "ADMIN") {
+        return { error: "Only admins can delete projects" }
+    }
+
+    try {
+        const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            select: { name: true }
+        })
+
+        if (!project) {
+            return { error: "Project not found" }
+        }
+
+        // Case-sensitive name verification
+        if (project.name !== name) {
+            return { error: "Project name does not match. Deletion aborted." }
+        }
+
+        await prisma.project.delete({
+            where: { id: projectId },
+        })
+
+        revalidatePath("/dashboard")
+        return { success: true }
+    } catch (error) {
+        console.error("Failed to delete project:", error)
+        return { error: "Failed to delete project" }
+    }
+}

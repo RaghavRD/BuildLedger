@@ -10,6 +10,7 @@ import { CreateTransactionDialog } from "@/components/transactions/create-transa
 import { EditTransactionDialog } from "@/components/transactions/edit-transaction-dialog"
 import { DeleteTransactionDialog } from "@/components/transactions/delete-transaction-dialog"
 import { EditProjectDialog } from "@/components/projects/edit-project-dialog"
+import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog"
 import { ExportButton } from "@/components/projects/export-button"
 import { InviteUserDialog } from "@/components/projects/invite-user-dialog"
 import { MemberList } from "@/components/projects/member-list"
@@ -111,7 +112,7 @@ export default async function ProjectDetailPage({
                                 Budget: {formatter.format(project.budget)}
                             </Badge>
                             {isAdmin && (
-                                <div className="w-full xs:w-auto flex justify-end">
+                                <div className="w-full xs:w-auto flex justify-end items-center gap-2">
                                     <EditProjectDialog
                                         project={{
                                             id: project.id,
@@ -122,6 +123,10 @@ export default async function ProjectDetailPage({
                                             endDate: project.endDate,
                                             status: project.status,
                                         }}
+                                    />
+                                    <DeleteProjectDialog
+                                        projectId={project.id}
+                                        projectName={project.name}
                                     />
                                 </div>
                             )}

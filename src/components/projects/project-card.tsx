@@ -2,6 +2,8 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import { DeleteProjectDialog } from "./delete-project-dialog"
 
 interface ProjectProps {
     id: string
@@ -14,6 +16,7 @@ interface ProjectProps {
     _count: {
         members: number
     }
+    isAdmin?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -33,10 +36,18 @@ export function ProjectCard({ project }: { project: ProjectProps }) {
         <Card>
             <CardHeader>
                 <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="truncate">{project.name}</CardTitle>
-                    <Badge className={`${statusColors[project.status] || "bg-gray-100"} capitalize border shadow-none`}>
-                        {(project.status || "active").toLowerCase().replace('_', ' ')}
-                    </Badge>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                        <CardTitle className="truncate">{project.name}</CardTitle>
+                        <Badge className={`${statusColors[project.status] || "bg-gray-100"} capitalize border shadow-none shrink-0`}>
+                            {(project.status || "active").toLowerCase().replace('_', ' ')}
+                        </Badge>
+                    </div>
+                    {project.isAdmin && (
+                        <DeleteProjectDialog
+                            projectId={project.id}
+                            projectName={project.name}
+                        />
+                    )}
                 </div>
                 <CardDescription className="line-clamp-2 h-10">
                     {project.description || "No description provided."}
