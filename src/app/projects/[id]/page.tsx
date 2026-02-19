@@ -17,6 +17,7 @@ import { MemberList } from "@/components/projects/member-list"
 import Link from "next/link"
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { formatCurrency } from "@/lib/utils"
 
 const PAGE_SIZE = 10
 
@@ -71,10 +72,6 @@ export default async function ProjectDetailPage({
     const startIndex = (safePage - 1) * PAGE_SIZE
     const paginatedTransactions = project.transactions.slice(startIndex, startIndex + PAGE_SIZE)
 
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'INR',
-    })
 
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-6 sm:p-8">
@@ -109,7 +106,9 @@ export default async function ProjectDetailPage({
                         </div>
                         <div className="flex flex-col xs:flex-row xs:items-center gap-2 pt-2 sm:pt-0">
                             <Badge variant="outline" className="w-full xs:w-auto justify-center text-xs sm:text-lg py-1.5 px-3 bg-white border-blue-100 text-blue-700 font-bold shadow-sm">
-                                Budget: {formatter.format(project.budget)}
+                                Budget:
+                                <span className="lg:hidden ml-1">{formatCurrency(project.budget, { compact: true })}</span>
+                                <span className="hidden lg:inline ml-1">{formatCurrency(project.budget)}</span>
                             </Badge>
                             {isAdmin && (
                                 <div className="w-full xs:w-auto flex justify-end items-center gap-2">
@@ -140,11 +139,17 @@ export default async function ProjectDetailPage({
                             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Spend</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl sm:text-3xl font-bold text-red-600">{formatter.format(totalSpendDisplay)}</div>
+                            <div className="text-2xl sm:text-3xl font-bold text-red-600 truncate">
+                                <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })}</span>
+                                <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)}</span>
+                            </div>
                             <div className="mt-4">
                                 <div className="flex flex-col xs:flex-row xs:items-center justify-between text-[10px] sm:text-xs mb-2 font-medium text-gray-500 gap-1 xs:gap-2">
                                     <span className="shrink-0">{percentUsed}% budget used</span>
-                                    <span className="break-words">{formatter.format(totalSpendDisplay)} / {formatter.format(project.budget)}</span>
+                                    <span className="break-words truncate">
+                                        <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })} / {formatCurrency(project.budget, { compact: true })}</span>
+                                        <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)} / {formatCurrency(project.budget)}</span>
+                                    </span>
                                 </div>
                                 <Progress value={percentUsed} className="h-2 sm:h-2.5 bg-gray-100" />
                             </div>
@@ -155,11 +160,15 @@ export default async function ProjectDetailPage({
                             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Rem. Budget</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-2xl sm:text-3xl font-bold ${cardRemainingBudget < 0 ? "text-red-500" : "text-green-600"}`}>
-                                {cardRemainingBudget >= 0 ? "+" : ""}{formatter.format(cardRemainingBudget)}
+                            <div className={`text-2xl sm:text-3xl font-bold truncate ${cardRemainingBudget < 0 ? "text-red-500" : "text-green-600"}`}>
+                                {cardRemainingBudget >= 0 ? "+" : ""}
+                                <span className="lg:hidden">{formatCurrency(cardRemainingBudget, { compact: true })}</span>
+                                <span className="hidden lg:inline">{formatCurrency(cardRemainingBudget)}</span>
                             </div>
-                            <div className={`mt-2 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full inline-block ${currentProfit >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-                                {currentProfit >= 0 ? "Potential Profit" : "Current Loss"}: {formatter.format(Math.abs(currentProfit))}
+                            <div className={`mt-2 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full inline-block truncate max-w-full ${currentProfit >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                                {currentProfit >= 0 ? "Potential Profit" : "Current Loss"}:
+                                <span className="lg:hidden ml-1">{formatCurrency(Math.abs(currentProfit), { compact: true })}</span>
+                                <span className="hidden lg:inline ml-1">{formatCurrency(Math.abs(currentProfit))}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -234,8 +243,8 @@ export default async function ProjectDetailPage({
                                                     </div>
                                                     <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-2 gap-y-3 pt-3 sm:pt-0 sm:pl-4 border-t sm:border-t-0 border-gray-100 mt-2 sm:mt-0">
                                                         <div className="text-left sm:text-right min-w-[100px] flex-1 sm:flex-none">
-                                                            <p className={`font-bold text-base sm:text-lg tracking-tight ${tx.type === "CREDIT" ? "text-green-600" : "text-red-600"}`}>
-                                                                {tx.type === "CREDIT" ? "+" : "-"}{formatter.format(tx.amount)}
+                                                            <p className={`font-bold text-base sm:text-lg tracking-tight whitespace-nowrap ${tx.type === "CREDIT" ? "text-green-600" : "text-red-600"}`}>
+                                                                {tx.type === "CREDIT" ? "+" : "-"}{formatCurrency(tx.amount)}
                                                             </p>
                                                             <p className="text-[10px] sm:text-xs text-gray-400 font-medium truncate max-w-[120px] sm:max-w-none">
                                                                 By {tx.createdBy.name.split(' ')[0]}

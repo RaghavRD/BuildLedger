@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { DeleteProjectDialog } from "./delete-project-dialog"
+import { formatCurrency } from "@/lib/utils"
 
 interface ProjectProps {
     id: string
@@ -26,11 +27,6 @@ const statusColors: Record<string, string> = {
 }
 
 export function ProjectCard({ project }: { project: ProjectProps }) {
-    // Simple currency formatter
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'INR',
-    })
 
     return (
         <Card>
@@ -57,7 +53,10 @@ export function ProjectCard({ project }: { project: ProjectProps }) {
                 <div className="grid gap-2">
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Budget:</span>
-                        <span className="font-semibold">{formatter.format(project.budget)}</span>
+                        <span className="font-semibold text-right truncate ml-2">
+                            <span className="sm:hidden">{formatCurrency(project.budget, { compact: true })}</span>
+                            <span className="hidden sm:inline">{formatCurrency(project.budget)}</span>
+                        </span>
                     </div>
                     {(project.startDate || project.endDate) && (
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground">

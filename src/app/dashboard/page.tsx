@@ -7,6 +7,7 @@ import { CreateProjectDialog } from "@/components/projects/create-project-dialog
 import { ProjectCard } from "@/components/projects/project-card"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrency } from "@/lib/utils"
 
 export default async function DashboardPage() {
     const session = await getServerSession(authOptions)
@@ -18,12 +19,6 @@ export default async function DashboardPage() {
     const projects = await getProjects()
     const stats = await getDashboardStats()
     const isAdmin = session.user.role === "ADMIN"
-
-    // Currency formatter
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'INR',
-    })
 
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-6 sm:p-8">
@@ -45,9 +40,14 @@ export default async function DashboardPage() {
                             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Month Spend</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl sm:text-3xl font-bold text-red-600">{formatter.format(stats.monthlySpend)}</div>
-                            <p className="text-[10px] text-red-600/70 mt-1">
-                                Lifetime: {formatter.format(stats.totalSpend)}
+                            <div className="text-2xl sm:text-3xl font-bold text-red-600 truncate">
+                                <span className="lg:hidden">{formatCurrency(stats.monthlySpend, { compact: true })}</span>
+                                <span className="hidden lg:inline">{formatCurrency(stats.monthlySpend)}</span>
+                            </div>
+                            <p className="text-[10px] text-red-600/70 mt-1 truncate">
+                                Lifetime:
+                                <span className="lg:hidden ml-1">{formatCurrency(stats.totalSpend, { compact: true })}</span>
+                                <span className="hidden lg:inline ml-1">{formatCurrency(stats.totalSpend)}</span>
                             </p>
                         </CardContent>
                     </Card>
@@ -57,8 +57,12 @@ export default async function DashboardPage() {
                             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Budget</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl sm:text-3xl font-bold text-green-600">+{formatter.format(stats.activeBudget)}</div>
-                            <p className="text-[10px] text-green-600/70 mt-1">Ready for allocation</p>
+                            <div className="text-2xl sm:text-3xl font-bold text-green-600 truncate">
+                                +
+                                <span className="lg:hidden">{formatCurrency(stats.activeBudget, { compact: true })}</span>
+                                <span className="hidden lg:inline">{formatCurrency(stats.activeBudget)}</span>
+                            </div>
+                            <p className="text-[10px] text-green-600/70 mt-1 truncate">Ready for allocation</p>
                         </CardContent>
                     </Card>
                 </div>
