@@ -71,6 +71,14 @@ export async function createTransaction(formData: FormData) {
             receiptPath = `/uploads/${filename}`
         }
 
+        let transactionDate = new Date()
+        if (validatedData.date) {
+            const parsedDate = new Date(validatedData.date)
+            if (parsedDate.toString() !== "Invalid Date") {
+                transactionDate = parsedDate
+            }
+        }
+
         await prisma.transaction.create({
             data: {
                 amount: validatedData.amount,
@@ -78,7 +86,7 @@ export async function createTransaction(formData: FormData) {
                 category: validatedData.category,
                 description: validatedData.description || "",
                 notes: validatedData.notes,
-                date: validatedData.date ? new Date(validatedData.date) : new Date(),
+                date: transactionDate,
                 receiptPath: receiptPath,
                 projectId: validatedData.projectId,
                 createdById: session.user.id,
@@ -89,9 +97,13 @@ export async function createTransaction(formData: FormData) {
         revalidatePath("/dashboard")
         return { success: true }
     } catch (error) {
-        console.error("Failed to create transaction:", error)
+        console.error("TRANSACTION_CREATE_ERROR:", {
+            error,
+            rawData,
+            userId: session.user.id
+        })
         if (error instanceof z.ZodError) {
-            return { error: error.issues[0].message }
+            return { error: `Validation Error: ${error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')}` }
         }
         const msg = error instanceof Error ? error.message : "Failed to create transaction"
         return { error: msg }
@@ -147,6 +159,14 @@ export async function updateTransaction(formData: FormData) {
             receiptPath = `/uploads/${filename}`
         }
 
+        let transactionDate = new Date()
+        if (validatedData.date) {
+            const parsedDate = new Date(validatedData.date)
+            if (parsedDate.toString() !== "Invalid Date") {
+                transactionDate = parsedDate
+            }
+        }
+
         await prisma.transaction.update({
             where: { id: validatedData.id },
             data: {
@@ -155,7 +175,7 @@ export async function updateTransaction(formData: FormData) {
                 category: validatedData.category,
                 description: validatedData.description || "",
                 notes: validatedData.notes,
-                date: validatedData.date ? new Date(validatedData.date) : new Date(),
+                date: transactionDate,
                 receiptPath: receiptPath,
             },
         })

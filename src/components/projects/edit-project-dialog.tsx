@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateProject } from "@/lib/actions/projects"
 import { toast } from "sonner"
-import { Settings2 } from "lucide-react"
+import { Pencil } from "lucide-react"
 
 interface EditProjectDialogProps {
     project: {
@@ -59,9 +59,8 @@ export function EditProjectDialog({ project }: EditProjectDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                    <Settings2 className="h-4 w-4 mr-2" />
-                    Edit Project
+                <Button variant="outline" size="icon" title="Edit Project">
+                    <Pencil className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

@@ -104,14 +104,14 @@ export default async function ProjectDetailPage({
                                 </p>
                             )}
                         </div>
-                        <div className="flex flex-col xs:flex-row xs:items-center gap-2 pt-2 sm:pt-0">
-                            <Badge variant="outline" className="w-full xs:w-auto justify-center text-xs sm:text-lg py-1.5 px-3 bg-white border-blue-100 text-blue-700 font-bold shadow-sm">
-                                Budget:
+                        <div className="flex flex-row items-center justify-between gap-2 pt-2 sm:pt-0">
+                            <Badge variant="outline" className="justify-center text-xs sm:text-lg py-1.5 px-3 bg-white border-gray-500 text-gray-500 font-semibold shadow-sm">
+                                Total Budget:
                                 <span className="lg:hidden ml-1">{formatCurrency(project.budget, { compact: true })}</span>
                                 <span className="hidden lg:inline ml-1">{formatCurrency(project.budget)}</span>
                             </Badge>
                             {isAdmin && (
-                                <div className="w-full xs:w-auto flex justify-end items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <EditProjectDialog
                                         project={{
                                             id: project.id,
@@ -190,10 +190,10 @@ export default async function ProjectDetailPage({
                             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 border-none">Transactions</h2>
                             <div className="flex flex-col xs:flex-row sm:items-center gap-2">
                                 <div className="w-full xs:w-auto xs:flex-1 sm:flex-none">
-                                    <ExportButton projectId={project.id} />
+                                    <CreateTransactionDialog projectId={project.id} />
                                 </div>
                                 <div className="w-full xs:w-auto xs:flex-1 sm:flex-none">
-                                    <CreateTransactionDialog projectId={project.id} />
+                                    <ExportButton projectId={project.id} />
                                 </div>
                             </div>
                         </div>
