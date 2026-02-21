@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { getProjects } from "@/lib/actions/projects"
 import { getDashboardStats } from "@/lib/actions/analytics"
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog"
+import { JoinProjectDialog } from "@/components/projects/join-project-dialog"
 import { ProjectCard } from "@/components/projects/project-card"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,22 +70,28 @@ export default async function DashboardPage() {
 
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Projects</h2>
-                    {isAdmin && <CreateProjectDialog />}
+                    <div className="flex items-center gap-3">
+                        <JoinProjectDialog />
+                        <CreateProjectDialog />
+                    </div>
                 </div>
 
                 {projects.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-lg border border-dashed">
-                        <p className="text-muted-foreground mb-4">
-                            {isAdmin ? "No projects found. Create one to get started." : "No projects assigned to you yet."}
+                    <div className="text-center py-16 bg-white rounded-lg border border-dashed flex flex-col items-center justify-center space-y-4">
+                        <p className="text-muted-foreground mb-2">
+                            No projects found. Create one or join an existing project to get started.
                         </p>
-                        {isAdmin && <CreateProjectDialog />}
+                        <div className="flex items-center gap-4">
+                            <JoinProjectDialog />
+                            <CreateProjectDialog />
+                        </div>
                     </div>
                 ) : (
                     <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {projects.map((project: any) => (
                             <ProjectCard
                                 key={project.id}
-                                project={{ ...project, isAdmin }}
+                                project={{ ...project, isAdmin: session.user.role === "ADMIN" || project.ownerId === session.user.id }}
                             />
                         ))}
                     </div>

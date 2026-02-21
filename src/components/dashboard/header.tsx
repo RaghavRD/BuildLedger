@@ -5,10 +5,10 @@ import Image from "next/image"
 import { useState } from "react"
 import { LogoutConfirmationDialog } from "./logout-confirmation-dialog"
 import { LogOut } from "lucide-react"
+import { getGlobalPendingRequests } from "@/lib/actions/access-requests"
+import { NotificationsDropdown } from "./notifications-dropdown"
 
 export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
-    const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
-
     return (
         <header className="mb-6 sm:mb-8 flex flex-row items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
@@ -26,6 +26,19 @@ export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
                     </p>
                 </div>
             </div>
+            <div className="flex items-center gap-2">
+                <NotificationsDropdown />
+                <DashboardHeaderClient />
+            </div>
+        </header>
+    )
+}
+
+function DashboardHeaderClient() {
+    const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+
+    return (
+        <>
             <Button
                 variant="ghost"
                 size="icon"
@@ -40,6 +53,6 @@ export function DashboardHeader({ user }: { user?: { name?: string | null } }) {
                 isOpen={isLogoutDialogOpen}
                 onOpenChange={setIsLogoutDialogOpen}
             />
-        </header>
+        </>
     )
 }

@@ -32,10 +32,7 @@ export async function createProject(formData: FormData) {
         return { error: "Unauthorized" }
     }
 
-    // Only ADMIN can create projects
-    if (session.user.role !== "ADMIN") {
-        return { error: "Only admins can create projects" }
-    }
+
 
     const rawData = {
         name: formData.get("name"),
@@ -49,6 +46,9 @@ export async function createProject(formData: FormData) {
     try {
         const validatedData = createProjectSchema.parse(rawData)
 
+        // Generate a 6-character alphanumeric invite code
+        const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
         await prisma.project.create({
             data: {
                 name: validatedData.name,
@@ -57,6 +57,7 @@ export async function createProject(formData: FormData) {
                 startDate: validatedData.startDate,
                 endDate: validatedData.endDate,
                 status: validatedData.status,
+                inviteCode,
                 ownerId: session.user.id,
                 members: {
                     connect: { id: session.user.id }
@@ -165,11 +166,6 @@ export async function addMemberToProject(projectId: string, email: string) {
         return { error: "Unauthorized" }
     }
 
-    // Only ADMIN can invite users
-    if (session.user.role !== "ADMIN") {
-        return { error: "Only admins can invite users" }
-    }
-
     try {
         const user = await prisma.user.findUnique({
             where: { email },
@@ -179,7 +175,6 @@ export async function addMemberToProject(projectId: string, email: string) {
             return { error: "User not found. They must register first." }
         }
 
-        // Check if already a member
         const project = await prisma.project.findUnique({
             where: { id: projectId },
             include: { members: { where: { id: user.id } } },
@@ -187,6 +182,11 @@ export async function addMemberToProject(projectId: string, email: string) {
 
         if (!project) {
             return { error: "Project not found" }
+        }
+
+        // Only ADMIN or Project Owner can invite users
+        if (session.user.role !== "ADMIN" && session.user.id !== project.ownerId) {
+            return { error: "Only admins or project owners can invite users" }
         }
 
         if (project.members.length > 0) {
@@ -217,11 +217,6 @@ export async function removeMemberFromProject(projectId: string, userId: string)
         return { error: "Unauthorized" }
     }
 
-    // Only ADMIN can remove users
-    if (session.user.role !== "ADMIN") {
-        return { error: "Only admins can remove users" }
-    }
-
     try {
         const project = await prisma.project.findUnique({
             where: { id: projectId },
@@ -229,6 +224,11 @@ export async function removeMemberFromProject(projectId: string, userId: string)
 
         if (!project) {
             return { error: "Project not found" }
+        }
+
+        // Only ADMIN or Project Owner can remove users
+        if (session.user.role !== "ADMIN" && session.user.id !== project.ownerId) {
+            return { error: "Only admins or project owners can remove users" }
         }
 
         // Cannot remove the project admin
@@ -259,10 +259,6 @@ export async function updateProject(formData: FormData) {
         return { error: "Unauthorized" }
     }
 
-    if (session.user.role !== "ADMIN") {
-        return { error: "Only admins can update projects" }
-    }
-
     const rawData = {
         id: formData.get("id"),
         name: formData.get("name"),
@@ -275,6 +271,19 @@ export async function updateProject(formData: FormData) {
 
     try {
         const validatedData = updateProjectSchema.parse(rawData)
+
+        const project = await prisma.project.findUnique({
+            where: { id: validatedData.id },
+            select: { ownerId: true }
+        })
+
+        if (!project) {
+            return { error: "Project not found" }
+        }
+
+        if (session.user.role !== "ADMIN" && session.user.id !== project.ownerId) {
+            return { error: "Only admins or project owners can update projects" }
+        }
 
         await prisma.project.update({
             where: { id: validatedData.id },
@@ -304,19 +313,18 @@ export async function deleteProject(projectId: string, name: string) {
         return { error: "Unauthorized" }
     }
 
-    // Only ADMIN can delete projects
-    if (session.user.role !== "ADMIN") {
-        return { error: "Only admins can delete projects" }
-    }
-
     try {
         const project = await prisma.project.findUnique({
             where: { id: projectId },
-            select: { name: true }
+            select: { name: true, ownerId: true }
         })
 
         if (!project) {
             return { error: "Project not found" }
+        }
+
+        if (session.user.role !== "ADMIN" && session.user.id !== project.ownerId) {
+            return { error: "Only admins or project owners can delete projects" }
         }
 
         // Case-sensitive name verification

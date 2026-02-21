@@ -59,6 +59,7 @@ model User {
   ownedProjects Project[] @relation("ProjectOwner")
   projects      Project[] @relation("ProjectMembers")
   transactions  Transaction[]
+  accessRequests AccessRequest[]
 }
 
 model VerificationToken {
@@ -79,6 +80,7 @@ model Project {
   startDate   DateTime?
   endDate     DateTime?
   status      String   @default("ACTIVE") // ACTIVE, COMPLETED, ON_HOLD
+  inviteCode  String   @unique @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -87,6 +89,7 @@ model Project {
   
   members     User[]   @relation("ProjectMembers")
   transactions Transaction[]
+  accessRequests AccessRequest[]
 }
 
 model Transaction {
@@ -104,5 +107,18 @@ model Transaction {
   
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
+}
+
+model AccessRequest {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId])
 }
 

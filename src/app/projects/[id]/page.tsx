@@ -14,6 +14,9 @@ import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog
 import { ExportButton } from "@/components/projects/export-button"
 import { InviteUserDialog } from "@/components/projects/invite-user-dialog"
 import { MemberList } from "@/components/projects/member-list"
+import { getPendingRequests } from "@/lib/actions/access-requests"
+import { AccessRequestsList } from "@/components/projects/access-requests-list"
+import { InviteCodeDialog } from "@/components/projects/invite-code-dialog"
 import Link from "next/link"
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -44,7 +47,12 @@ export default async function ProjectDetailPage({
         notFound()
     }
 
-    const isAdmin = session.user.role === "ADMIN"
+    const isAdmin = session.user.role === "ADMIN" || project.ownerId === session.user.id
+
+    let pendingRequests: any[] = []
+    if (isAdmin) {
+        pendingRequests = await getPendingRequests(project.id)
+    }
 
     // Calculate totals: DEBIT subtracts, CREDIT adds back
     const totalDebit = project.transactions
@@ -78,7 +86,13 @@ export default async function ProjectDetailPage({
             <div className="mx-auto max-w-7xl">
                 <DashboardHeader user={session.user} />
 
-                <div className="mb-6">
+                {isAdmin && pendingRequests.length > 0 && (
+                    <div className="mt-6 mb-2">
+                        <AccessRequestsList requests={pendingRequests} projectId={project.id} />
+                    </div>
+                )}
+
+                <div className="mb-6 mt-4">
                     <Link href="/dashboard" className="text-xs sm:text-sm text-muted-foreground hover:underline mb-3 inline-flex items-center gap-1 group">
                         <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 group-hover:-translate-x-1 transition-transform" />
                         Back to Dashboard
@@ -105,11 +119,16 @@ export default async function ProjectDetailPage({
                             )}
                         </div>
                         <div className="flex flex-row items-center justify-between gap-2 pt-2 sm:pt-0">
-                            <Badge variant="outline" className="justify-center text-xs sm:text-lg py-1.5 px-3 bg-white border-gray-500 text-gray-500 font-semibold shadow-sm">
-                                Total Budget:
-                                <span className="lg:hidden ml-1">{formatCurrency(project.budget, { compact: true })}</span>
-                                <span className="hidden lg:inline ml-1">{formatCurrency(project.budget)}</span>
-                            </Badge>
+                            {isAdmin && project.inviteCode && (
+                                <InviteCodeDialog projectName={project.name} inviteCode={project.inviteCode} />
+                            )}
+                            {isAdmin && (
+                                <Badge variant="outline" className="justify-center text-xs sm:text-lg py-1.5 px-3 bg-white border-gray-500 text-gray-500 font-semibold shadow-sm">
+                                    Total Budget:
+                                    <span className="lg:hidden ml-1">{formatCurrency(project.budget, { compact: true })}</span>
+                                    <span className="hidden lg:inline ml-1">{formatCurrency(project.budget)}</span>
+                                </Badge>
+                            )}
                             {isAdmin && (
                                 <div className="flex items-center gap-2">
                                     <EditProjectDialog
@@ -133,46 +152,50 @@ export default async function ProjectDetailPage({
                     </div>
                 </div>
 
-                <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
-                    <Card className="xs:col-span-1 lg:col-span-1 border-none shadow-sm bg-white">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Spend</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl sm:text-3xl font-bold text-red-600 truncate">
-                                <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })}</span>
-                                <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)}</span>
-                            </div>
-                            <div className="mt-4">
-                                <div className="flex flex-col xs:flex-row xs:items-center justify-between text-[10px] sm:text-xs mb-2 font-medium text-gray-500 gap-1 xs:gap-2">
-                                    <span className="shrink-0">{percentUsed}% budget used</span>
-                                    <span className="break-words truncate">
-                                        <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })} / {formatCurrency(project.budget, { compact: true })}</span>
-                                        <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)} / {formatCurrency(project.budget)}</span>
-                                    </span>
-                                </div>
-                                <Progress value={percentUsed} className="h-2 sm:h-2.5 bg-gray-100" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="xs:col-span-1 lg:col-span-1 border-none shadow-sm bg-white">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Rem. Budget</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className={`text-2xl sm:text-3xl font-bold truncate ${cardRemainingBudget < 0 ? "text-red-500" : "text-green-600"}`}>
-                                {cardRemainingBudget >= 0 ? "+" : ""}
-                                <span className="lg:hidden">{formatCurrency(cardRemainingBudget, { compact: true })}</span>
-                                <span className="hidden lg:inline">{formatCurrency(cardRemainingBudget)}</span>
-                            </div>
-                            <div className={`mt-2 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full inline-block truncate max-w-full ${currentProfit >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-                                {currentProfit >= 0 ? "Potential Profit" : "Current Loss"}:
-                                <span className="lg:hidden ml-1">{formatCurrency(Math.abs(currentProfit), { compact: true })}</span>
-                                <span className="hidden lg:inline ml-1">{formatCurrency(Math.abs(currentProfit))}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="xs:col-span-2 lg:col-span-1 border-none shadow-sm bg-white">
+                <div className={`grid gap-4 grid-cols-1 ${isAdmin ? 'xs:grid-cols-2 lg:grid-cols-3' : ''} mb-6 sm:mb-8`}>
+                    {isAdmin && (
+                        <>
+                            <Card className="xs:col-span-1 lg:col-span-1 border-none shadow-sm bg-white">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Spend</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl sm:text-3xl font-bold text-red-600 truncate">
+                                        <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })}</span>
+                                        <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)}</span>
+                                    </div>
+                                    <div className="mt-4">
+                                        <div className="flex flex-col xs:flex-row xs:items-center justify-between text-[10px] sm:text-xs mb-2 font-medium text-gray-500 gap-1 xs:gap-2">
+                                            <span className="shrink-0">{percentUsed}% budget used</span>
+                                            <span className="break-words truncate">
+                                                <span className="lg:hidden">{formatCurrency(totalSpendDisplay, { compact: true })} / {formatCurrency(project.budget, { compact: true })}</span>
+                                                <span className="hidden lg:inline">{formatCurrency(totalSpendDisplay)} / {formatCurrency(project.budget)}</span>
+                                            </span>
+                                        </div>
+                                        <Progress value={percentUsed} className="h-2 sm:h-2.5 bg-gray-100" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card className="xs:col-span-1 lg:col-span-1 border-none shadow-sm bg-white">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Rem. Budget</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className={`text-2xl sm:text-3xl font-bold truncate ${cardRemainingBudget < 0 ? "text-red-500" : "text-green-600"}`}>
+                                        {cardRemainingBudget >= 0 ? "+" : ""}
+                                        <span className="lg:hidden">{formatCurrency(cardRemainingBudget, { compact: true })}</span>
+                                        <span className="hidden lg:inline">{formatCurrency(cardRemainingBudget)}</span>
+                                    </div>
+                                    <div className={`mt-2 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full inline-block truncate max-w-full ${currentProfit >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                                        {currentProfit >= 0 ? "Potential Profit" : "Current Loss"}:
+                                        <span className="lg:hidden ml-1">{formatCurrency(Math.abs(currentProfit), { compact: true })}</span>
+                                        <span className="hidden lg:inline ml-1">{formatCurrency(Math.abs(currentProfit))}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </>
+                    )}
+                    <Card className={`${isAdmin ? 'xs:col-span-2 lg:col-span-1' : ''} border-none shadow-sm bg-white`}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Transactions</CardTitle>
                         </CardHeader>
